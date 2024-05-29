@@ -3,11 +3,18 @@ from bentoml.exceptions import BentoMLException, BadInput
 from openai import AsyncOpenAI
 
 from mistral import MistralService
+from toxic_detect import ToxicClassifier
 
 from annotated_types import Ge, Le
 from typing_extensions import Annotated
 from typing import AsyncGenerator
+from enum import Enum, IntEnum
+from pydantic import BaseModel, ValidationError
 
+
+class ModelName(str, Enum):
+    gpt3 = 'gpt3'
+    mistral = 'mistral'
 
 MAX_TOKENS = 1024
 
@@ -15,10 +22,11 @@ MAX_TOKENS = 1024
 class LLMRouter:
 
     mistral = bentoml.depends(MistralService)
-    # classifier = bentoml.depends(BertService)
+    toxic_classifier = bentoml.depends(ToxicClassifier)
 
     def __init__(self):
         self.openai_client = AsyncOpenAI()
+
 
     @bentoml.api
     async def generate_mistral(
@@ -26,17 +34,10 @@ class LLMRouter:
         prompt: str = "Explain superconductors like I'm five years old",
         max_tokens: Annotated[int, Ge(128), Le(MAX_TOKENS)] = MAX_TOKENS,
     ) -> AsyncGenerator[str, None]:
-        # query_type = (await classifier.classify(prompt))[0]['label']
 
-        # if query_type == "toxic":
-        #     raise BadInput("Request Refused..")
-        #
-        # if query_type == "require_db":
-        #     prompt = rag_engine.enrich(prompt)
-        #     return self.mistral
-        #     
-        # if query_type == ""
-        return self.mistral.generate(prompt, max_tokens)
+        response = self.mistral.generate(prompt, max_tokens)
+        async for chunk in response:
+            yield chunk
 
     
     @bentoml.api
@@ -59,6 +60,21 @@ class LLMRouter:
 
 
 
+    @bentoml.api
+    async def generate(
+        self,
+        prompt: str = "Explain superconductors like I'm five years old",
+        model: ModelName = "mistral",
+    ) -> AsyncGenerator[str, None]:
+        res = self.toxic_classifier.classify([prompt])[0]['label']
 
+        if res is "toxic":
+            raise BadInput("Toxic input detected")
+        else:
+            if model == "mistral":
+                gen = self.generate_mistral(prompt)
+            else:
+                gen = self.generate_openai(prompt)
 
-
+            async for chunk in gen:
+                yield chunk
