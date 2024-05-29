@@ -1,0 +1,10 @@
+service: "service:LLMRouter"
+include:
+- "*.py"
+- "bentovllm_openai/*.py"
+python:
+  requirements_txt: "./requirements.txt"
+  lock_packages: false
+envs:
+  - name: HF_TOKEN
+  - name: OPENAI_API_KEY
