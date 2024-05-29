@@ -1,5 +1,4 @@
 import bentoml
-from bentoml.exceptions import BentoMLException, BadInput
 from openai import AsyncOpenAI
 
 from mistral import MistralService
@@ -66,10 +65,10 @@ class LLMRouter:
         prompt: str = "Explain superconductors like I'm five years old",
         model: ModelName = "mistral",
     ) -> AsyncGenerator[str, None]:
-        res = self.toxic_classifier.classify([prompt])[0]['label']
+        res: str = self.toxic_classifier.classify([prompt])[0]['label']
 
-        if res is "toxic":
-            raise BadInput("Toxic input detected")
+        if res == "toxic":
+            yield "Query Rejected: Bad input"
         else:
             if model == "mistral":
                 gen = self.generate_mistral(prompt)
