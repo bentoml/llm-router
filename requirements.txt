@@ -1,4 +1,4 @@
-bentoml @ git+https://github.com/frostming/BentoML.git@fix/client-stream
+bentoml @  git+https://github.com/bentoml/BentoML.git@main
 torch==2.1.2
 transformers==4.39.3
 vllm==0.4.0.post1

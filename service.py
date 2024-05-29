@@ -17,7 +17,15 @@ class ModelName(str, Enum):
 
 MAX_TOKENS = 1024
 
-@bentoml.service
+@bentoml.service(
+    traffic={
+        "timeout": 400,
+        "concurrency": 100,
+    },
+    resources={
+        "cpu": "8",
+    },
+)
 class LLMRouter:
 
     mistral = bentoml.depends(MistralService)
