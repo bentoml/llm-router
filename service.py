@@ -1,4 +1,5 @@
 import bentoml
+from bentoml.exceptions import BadInput
 from openai import AsyncOpenAI
 
 from mistral import MistralService
@@ -12,14 +13,14 @@ from pydantic import BaseModel, ValidationError
 
 
 class ModelName(str, Enum):
-    gpt3 = 'gpt3'
+    gpt3 = 'gpt-3.5-turbo'
+    gpt4 = 'gpt-4o'
     mistral = 'mistral'
 
 MAX_TOKENS = 1024
 
 @bentoml.service(
     traffic={
-        "timeout": 400,
         "concurrency": 100,
     },
     resources={
@@ -51,6 +52,7 @@ class LLMRouter:
     async def generate_openai(
         self,
         prompt: str = "Explain superconductors like I'm five years old",
+        model: str = "gpt-3.5-turbo",
         max_tokens: Annotated[int, Ge(128), Le(MAX_TOKENS)] = MAX_TOKENS,
     ) -> AsyncGenerator[str, None]:
         res = await self.openai_client.chat.completions.create(
@@ -58,7 +60,7 @@ class LLMRouter:
                 "role": "user",
                 "content": prompt,
             }],
-            model="gpt-3.5-turbo",
+            model=model,
             max_tokens=max_tokens,
             stream=True
         )
@@ -72,16 +74,17 @@ class LLMRouter:
         self,
         prompt: str = "Explain superconductors like I'm five years old",
         model: ModelName = "mistral",
+        max_tokens: Annotated[int, Ge(128), Le(MAX_TOKENS)] = MAX_TOKENS,
     ) -> AsyncGenerator[str, None]:
         res: str = self.toxic_classifier.classify([prompt])[0]['label']
 
         if res == "toxic":
-            yield "Query Rejected: Bad input"
+            yield "Bad Input"
         else:
             if model == "mistral":
-                gen = self.generate_mistral(prompt)
+                gen = self.generate_mistral(prompt, max_tokens)
             else:
-                gen = self.generate_openai(prompt)
+                gen = self.generate_openai(prompt, model, max_tokens)
 
             async for chunk in gen:
                 yield chunk
