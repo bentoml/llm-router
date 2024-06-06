@@ -7,7 +7,7 @@ from toxic_detect import ToxicClassifier
 
 from annotated_types import Ge, Le
 from typing_extensions import Annotated
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Literal
 from enum import Enum, IntEnum
 from pydantic import BaseModel, ValidationError
 
@@ -52,7 +52,7 @@ class LLMRouter:
     async def generate_openai(
         self,
         prompt: str = "Explain superconductors like I'm five years old",
-        model: str = "gpt-3.5-turbo",
+        model: Literal["gpt-3.5-turbo", "gpt-4o"] = "gpt-3.5-turbo",
         max_tokens: Annotated[int, Ge(128), Le(MAX_TOKENS)] = MAX_TOKENS,
     ) -> AsyncGenerator[str, None]:
         res = await self.openai_client.chat.completions.create(
