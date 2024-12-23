@@ -6,7 +6,7 @@ This is a BentoML example project, showing you how to serve and deploy a multi-L
 
 [Mistral](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2), [GPT-3.5 Turbo, and GPT-4o](https://platform.openai.com/docs/models) are included in this project. You can integrate other LLMs by refering to the [BentoVLLM example project](https://github.com/bentoml/BentoVLLM).
 
-See [here](https://github.com/bentoml/BentoML/tree/main/examples) for a full list of BentoML example projects.
+See [here](https://docs.bentoml.com/en/latest/examples/overview.html) for a full list of BentoML example projects.
 
 ## Prerequisites
 
